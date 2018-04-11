@@ -44,8 +44,9 @@ var STREAM_UNOPENED = 1;
 var STREAM_OPENED   = 2;
 var STREAM_CLOSED   = 3;
 
-var XML_STREAM_CLOSE = '</stream:stream>';
-
+var XML_STREAM_OPEN = '<open';
+var XML_STREAM_CLOSE = '</close>';
+var XML_STREAM_FRAMING = 'urn:ietf:params:xml:ns:xmpp-framing';
 //
 // Important links:
 //
@@ -104,17 +105,18 @@ exports.createServer = function(bosh_server, options, webSocket) {
     
     wsep.on('stream-added', function(sstate) {
         var to = sstate.to || '';
-        var ss_xml = new ltx.Element('stream:stream', {
-            'xmlns': 'jabber:client',
-            'xmlns:stream': 'http://etherx.jabber.org/streams',
+        var ss_xml = new ltx.Element('open', {
+            'xmlns': XML_STREAM_FRAMING,
+            // 'id': '',
             'version': '1.0',
-            'xml:lang': 'en',
             'from': to
         }).toString();
         if (sstate.has_open_stream_tag) {
             ss_xml = ss_xml.replace('/>', '>');
         }
         log.trace("%s sending data: %s", sstate.name, ss_xml);
+
+
         wsep.emit('response', ss_xml, sstate);
     });
 
@@ -135,6 +137,7 @@ exports.createServer = function(bosh_server, options, webSocket) {
             try {
                 sstate.conn.send(response.toString());
             } catch (e) {
+                console.error(e);
                 log.warn(e.stack);
             }
         }
@@ -210,14 +213,15 @@ exports.createServer = function(bosh_server, options, webSocket) {
         });
 
         conn.on('message', function(message) {
-            // console.log("message:", message);
+            
+            // <open xmlns='urn:ietf:params:xml:ns:xmpp-framing' to='gmail.com' version='1.0'/>            
             if (typeof message != 'string') {
                 log.warn("Only utf-8 supported...");
                 return;
             }
             
             // Check if this is a stream open message
-            if (message.indexOf('<stream:stream') !== -1) {
+            if (message.indexOf(XML_STREAM_OPEN) !== -1) {
                 // Yes, it is.
 
                 // Remove the leading <?xml ... ?> declaration if present.
@@ -226,10 +230,14 @@ exports.createServer = function(bosh_server, options, webSocket) {
                 // https://github.com/dhruvbird/node-xmpp-bosh/issues/59
                 // for more details.
                 //
-                message = message.replace(xmlTextDeclRE, '');
+                // console.log("message:", message);
+                // message = message.replace(xmlTextDeclRE, '');
+                // console.log("Remove message:", message);
+
 
                 // Now, check if it is closed or unclosed
                 if (message.indexOf('/>') === -1) {
+
                     // Unclosed - Close it to continue parsing
                     message += XML_STREAM_CLOSE;
                     sstate.has_open_stream_tag = true;
@@ -280,13 +288,13 @@ exports.createServer = function(bosh_server, options, webSocket) {
             // The stream start node is special since we trigger a
             // stream-add event when we get it.
             var ss_node = nodes.filter(function(node) {
-                return typeof node.is === 'function' && node.is('stream');
+                return typeof node.is === 'function' && node.is('open');
             });
-            
+
             ss_node = us.first(ss_node);
-            
+
             nodes = nodes.filter(function(node) {
-                return typeof node.is === 'function' ? !node.is('stream') : true;
+                return typeof node.is === 'function' ? !node.is('open') : true;
             });
             
             if (ss_node) {
@@ -304,7 +312,7 @@ exports.createServer = function(bosh_server, options, webSocket) {
                 }
             }
             
-            // console.log("nodes:", nodes);
+            
             assert(nodes instanceof Array);
             
             // Process the nodes normally.
