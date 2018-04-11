@@ -107,8 +107,8 @@ exports.createServer = function(bosh_server, options, webSocket) {
         var to = sstate.to || '';
         var ss_xml = new ltx.Element('open', {
             'xmlns': XML_STREAM_FRAMING,
-            // 'id': '',
             'version': '1.0',
+            'id': sstate.name,
             'from': to
         }).toString();
         if (sstate.has_open_stream_tag) {

@@ -38,6 +38,7 @@ function Stream(session, node, options, bep, call_on_terminate) {
     this._options	    = options;
     this._bep	        = bep;
     this.name	        = uuid();
+    console.log(this.name);
     this.terminated     = false;
     this.to		        = node.attrs.to;
     this.session	    = session;
