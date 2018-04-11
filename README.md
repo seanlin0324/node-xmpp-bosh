@@ -239,6 +239,7 @@ if the *callback=* GET query parameter is supplied.
 * [http://xmpp.org/extensions/xep-0124.html](http://xmpp.org/extensions/xep-0124.html)
 * [http://xmpp.org/extensions/xep-0206.html](http://xmpp.org/extensions/xep-0206.html)
 * [http://tools.ietf.org/html/draft-moffitt-xmpp-over-websocket-00](http://tools.ietf.org/html/draft-moffitt-xmpp-over-websocket-00)
+* [https://tools.ietf.org/html/rfc7395](https://tools.ietf.org/html/rfc7395)
 
 
 ### Dependencies
